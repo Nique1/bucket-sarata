@@ -21,7 +21,6 @@ public class BasketSplitter {
 
     private Map<String, List<String>> mapJsonToConfigMap(String absolutePathToConfigFile) {
         ObjectMapper mapper = new ObjectMapper();
-
         Map<String, List<String>> configMap;
 
         try {
@@ -34,23 +33,27 @@ public class BasketSplitter {
         return configMap;
     }
 
-    private void sortAvailableDeliveryOptionsDesc(Map<String, Integer> configMap) {
+    private Map<String, Integer> sortAvailableDeliveryOptionsDesc(Map<String, Integer> configMap) {
         List<Map.Entry<String, Integer>> list = new LinkedList<>(configMap.entrySet());
         list.sort(Map.Entry.comparingByValue(Comparator.reverseOrder()));
-        Map<String, Integer> sortedMap = new ConcurrentHashMap<>(configMap);
+        Map<String, Integer> sortedMap = new LinkedHashMap<>();
 
         for (Map.Entry<String, Integer> entry : list) {
             sortedMap.put(entry.getKey(), entry.getValue());
         }
 
-
+        return sortedMap;
     }
 
     private Map<String, Integer> getAvailableDeliveryOptions(List<String> deliveryOptions) {
-        Map<String, Integer> deliveryOptionsCount = new LinkedHashMap<>();
+        Map<String, Integer> deliveryOptionsCount = new HashMap<>();
         for (String item : deliveryOptions) {
-            for (String deliveryOption : this.deliveryOptions.get(item)) {
-                deliveryOptionsCount.put(deliveryOption, deliveryOptionsCount.getOrDefault(deliveryOption, 0) + 1);
+            List<String> options = this.deliveryOptions.get(item);
+            if(options!= null){
+                for (String deliveryOption : options) {
+                    deliveryOptionsCount.put(deliveryOption, deliveryOptionsCount.getOrDefault(deliveryOption, 0) + 1);
+
+                }
 
             }
         }
@@ -78,12 +81,27 @@ public class BasketSplitter {
 
     public Map<String, List<String>> split(List<String> items) {
         Map<String, Integer> deliveryOptionCounts = getAvailableDeliveryOptions(items);
-        Map<String, List<String>> groupedItems = new LinkedHashMap<>();
-        for (String item : items) {
-            groupItems(deliveryOptionCounts, groupedItems, item, this.deliveryOptions);
+        Map<String, List<String>> groupedItems = new HashMap<>();
+        Set<String> assignedItems = new HashSet<>();
+
+//        for (String item : items) {
+//            groupItems(deliveryOptionCounts, groupedItems, item, this.deliveryOptions);
+//        }
+        for (String deliveryOption : deliveryOptionCounts.keySet()) {
+            List<String> itemsForThisDelivery = new ArrayList<>();
+
+            for (String item : items) {
+                if (!assignedItems.contains(item) && deliveryOptions.get(item).contains(deliveryOption)) {
+                    itemsForThisDelivery.add(item);
+                    assignedItems.add(item);
+                }
+            }
+
+            if (!itemsForThisDelivery.isEmpty()) {
+                groupedItems.put(deliveryOption, itemsForThisDelivery);
+            }
         }
 
-        sortAvailableDeliveryOptionsDesc(deliveryOptionCounts);
         return groupedItems;
     }
 
