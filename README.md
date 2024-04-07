@@ -8,6 +8,5 @@ It enables the efficient grouping of products in a customer's basket based on av
 To install the library, clone the repository and build the project using a build tool such as Maven or Gradle.
 
 ```bash
-git clone https://github.com/YourGitHub/BasketSplitter.git
-cd BasketSplitter
-mvn install # or 'gradle build' if using Gradle
+git clone https://github.com/Nique1/bucket-sarata.git
+
